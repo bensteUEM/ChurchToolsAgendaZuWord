@@ -86,30 +86,53 @@ class ChurchToolsAgendaZuWord:
         modifiedDate2 = modifiedDate.astimezone().strftime('%a %d.%m (%H:%M:%S)')
         document.add_paragraph("Abzug aus CT mit Änderungen bis inkl.: " + modifiedDate2)
 
+        agenda_item = 0  # Position Argument from Event Agenda is weird therefore counting manually
+        pre_event_last_item = True  # Event start is no item therefore look for change
+
         for item in agenda["items"]:
             if excludeBeforeEvent and item['isBeforeEvent']:
                 continue
 
-            title = str(item["position"]) + ' ' + item["title"]
+            if item['type'] == 'header':
+                document.add_heading(item["title"], level=1)
+                continue
+
+            if pre_event_last_item:  # helper for event start heading which is not part of the api
+                if not item['isBeforeEvent']:
+                    pre_event_last_item = False
+                    document.add_heading('Eventstart', level=1)
+
+            agenda_item += 1
+
+            title = str(agenda_item)
+            title += ' ' + item["title"]
+
             if item['type'] == 'song':
-                title += ': ' + item['song']['title'] + ' (' + item['song'][
-                    'category'] + ')'  # TODO #5 check if fails on empty song items
+                title += ': ' + item['song']['title']
+                title += ' (' + item['song']['category'] + ')'  # TODO #5 check if fails on empty song items
+
             document.add_heading(title, level=2)
 
-            resonsible_list = [item['responsible']] if isinstance(item['responsible'], dict) else item['responsible']
             responsible_list = []
             for responsible_item in item['responsible']['persons']:
                 if responsible_item['person'] is not None:
                     responsible_text = responsible_item['person']['title']
+                    if not responsible_item['accepted']:
+                        responsible_text += ' (Angefragt)'
                 else:
                     responsible_text = '?'
                 responsible_text += ' ' + responsible_item['service'] + ''
                 responsible_list.append(responsible_text)
 
+            if len(item['responsible']) > 0 and len(item['responsible']['persons']) == 0:
+                if len(item['responsible']['text']) > 0:
+                    responsible_list.append(
+                        item['responsible']['text'] + ' (Person statt Rolle in ChurchTools hinterlegt!)')
+
             responsible_text = ", ".join(responsible_list)
             document.add_paragraph(responsible_text)
 
-            if item['note'] is not None:
+            if item['note'] is not None and item['note'] != '':
                 document.add_paragraph(item["note"])
 
             if len(item['serviceGroupNotes']) > 0:
