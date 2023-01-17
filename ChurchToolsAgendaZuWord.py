@@ -74,7 +74,7 @@ class ChurchToolsAgendaZuWord:
             self.process_agenda(self.event_agendas[self.lbx1.curselection()[0]], serviceGroups=selectedServiceGroups)
             self.win.destroy()
 
-    def process_agenda(self, agenda, serviceGroups):
+    def process_agenda(self, agenda, serviceGroups, excludeBeforeEvent=True):
         logging.debug('Processing: ' + agenda['name'])
 
         document = docx.Document()
@@ -86,7 +86,9 @@ class ChurchToolsAgendaZuWord:
         document.add_paragraph("Abzug aus CT mit Änderungen bis inkl.: " + modifiedDate2)
 
         for item in agenda["items"]:
-            #todo #3 check if pre_event items should be skipped
+            if excludeBeforeEvent and item['isBeforeEvent']:
+                continue
+
             title = str(item["position"]) + ' ' + item["title"]
             if item['type'] == 'song':
                 title += ': ' + item['song']['title'] + ' (' + item['song'][
