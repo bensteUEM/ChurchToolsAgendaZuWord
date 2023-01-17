@@ -74,15 +74,12 @@ class ChurchToolsAgendaZuWord:
         logging.debug('Processing: ' + agenda['name'])
 
         document = docx.Document()
-        document.add_heading(agenda['name'])
+        heading = agenda['name']
+        heading += '- Entwurf' if not agenda['isFinal'] else ''
+        document.add_heading(heading)
         modifiedDate = datetime.strptime(agenda["meta"]['modifiedDate'], '%Y-%m-%dT%H:%M:%S%z')
         modifiedDate2 = modifiedDate.astimezone().strftime('%a %d.%m (%H:%M:%S)')
         document.add_paragraph("Abzug aus CT mit Änderungen bis inkl.: " + modifiedDate2)
-
-        document.add_heading("TEMP Alle AGENDA Informationen", level=2)
-        temp = agenda.copy()
-        temp.pop("items", None)
-        document.add_paragraph(temp.__str__())  # TODO #2 can be removed if status in title
 
         for item in agenda["items"]:
             #todo #3 check if pre_event items should be skipped
