@@ -42,9 +42,10 @@ class ChurchToolsAgendaZuWord:
         i = 0
         for event in self.events:
             startdate = datetime.fromisoformat(event['startDate'][:-1])
-            datetext = startdate.__format__('%a %b %d\t%H:%M')
+            datetext = startdate.astimezone().strftime('%a %b %d\t%H:%M')
             lbx1.insert(i, datetext + '\t' + event['name'])
             i += 1
+
         lbx1.pack()
 
         btn1 = tkinter.Button(win, text='Veranstaltung als Text umwandeln', command=self.btn1_press)
@@ -107,7 +108,9 @@ class ChurchToolsAgendaZuWord:
 
             responsible_text = ", ".join(responsible_list)
             document.add_paragraph(responsible_text)
-            document.add_paragraph(item["note"])
+
+            if item['note'] is not None:
+                document.add_paragraph(item["note"])
 
             if len(item['serviceGroupNotes']) > 0:
                 for note in item['serviceGroupNotes']:

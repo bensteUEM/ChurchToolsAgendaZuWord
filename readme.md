@@ -12,6 +12,9 @@ It was developed as a special use case to support a legacy workflow at Evangelis
 IMPORTANT - Access to a ChurchTools instance is required in order to apply the code
 ```
 
+In order to use the functionality run main.py and use the GUI for all following interaction.
+Parsed files are placed in ./output which is ommited from version control
+
 ## Compatibility
 
 Tested against the current Churchtools APIs as of Jan 2023.
