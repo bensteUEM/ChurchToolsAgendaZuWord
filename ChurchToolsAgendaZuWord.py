@@ -15,6 +15,7 @@ class ChurchToolsAgendaZuWord:
                             level=logging.DEBUG)
         logging.debug("ChurchToolsAgendaZuWord initialized")
         self.events = []
+        self.serviceGroups = self.api.get_event_masterdata(type='serviceGroups', returnAsDict=True)
         self.event_agendas = []
         self.load_events_with_agenda()
         self.create_gui()
@@ -66,11 +67,14 @@ class ChurchToolsAgendaZuWord:
         else:
             event = self.events[self.lbx1.curselection()[0]]
             logging.debug("Selected event ID: {}".format(event['id']))
-            #TODO #4 add FileChooser for destination path
-            self.process_agenda(self.event_agendas[self.lbx1.curselection()[0]])
+            # TODO #4 add FileChooser for destination path
+            selected = [1]
+            selectedServiceGroups = {key: value for key, value in self.serviceGroups.items() if
+                                     key in selected}  # TODO 1 allow for user choice ...
+            self.process_agenda(self.event_agendas[self.lbx1.curselection()[0]], serviceGroups=selectedServiceGroups)
             self.win.destroy()
 
-    def process_agenda(self, agenda):
+    def process_agenda(self, agenda, serviceGroups):
         logging.debug('Processing: ' + agenda['name'])
 
         document = docx.Document()
@@ -103,7 +107,11 @@ class ChurchToolsAgendaZuWord:
             document.add_paragraph(responsible_text)
             document.add_paragraph(item["note"])
 
-            document.add_heading("TEMP Alle Item Informationen", level=3)
-            document.add_paragraph(item.__str__())  # TODO #1 include serviceNotes
+            if len(item['serviceGroupNotes']) > 0:
+                for note in item['serviceGroupNotes']:
+                    if note['serviceGroupId'] in serviceGroups.keys() and len(note['note']) > 0:
+                        document.add_heading("Bemerkung für {}:".format(serviceGroups[note['serviceGroupId']]['name']),
+                                             level=4)
+                        document.add_paragraph(note['note'])
 
         document.save('output/' + agenda['name'] + '.docx')
