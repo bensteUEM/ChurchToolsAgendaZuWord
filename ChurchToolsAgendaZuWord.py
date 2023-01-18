@@ -1,5 +1,5 @@
 import logging
-import tkinter
+import tkinter as tk
 from datetime import datetime
 
 import docx
@@ -32,33 +32,44 @@ class ChurchToolsAgendaZuWord:
         logging.debug("{} Events kept because schedule exists".format(len(events_temp)))
 
     def create_gui(self):
-        win = tkinter.Tk()
+        win = tk.Tk()
         win.title = 'Bitte Event auswählen'
 
-        lbl1 = tkinter.Label(win, text="Die nächsten Veranstaltungen:")
+        lbl1 = tk.Label(win, text="Die nächsten Veranstaltungen:")
         lbl1.pack()
+        logging.debug("GUI Header defined")
 
-        lbx1 = tkinter.Listbox(win, width=500)
+        lbx1 = tk.Listbox(win, width=500)
         i = 0
         for event in self.events:
             startdate = datetime.fromisoformat(event['startDate'][:-1])
             datetext = startdate.astimezone().strftime('%a %b %d\t%H:%M')
             lbx1.insert(i, datetext + '\t' + event['name'])
             i += 1
-
         lbx1.pack()
+        logging.debug("GUI Events defined")
 
-        btn1 = tkinter.Button(win, text='Veranstaltung als Text umwandeln', command=self.btn1_press)
-        logging.debug("GUI Elements defined")
+        self.serviceGroupVars = {}
+        serviceGroupCheckboxes = {}
+        for value in self.serviceGroups.values():
+            self.serviceGroupVars[value['name']] = tk.IntVar()
+            serviceGroupCheckboxes[value['name']] = \
+                tk.Checkbutton(win, text=value['name'], variable=self.serviceGroupVars[value['name']], onvalue=1,
+                               offvalue=0)
+            if value['name'] == 'Programm':
+                serviceGroupCheckboxes[value['name']].select()
+            serviceGroupCheckboxes[value['name']].pack()
+        logging.debug("GUI Checkboxes defined")
 
+        btn1 = tk.Button(win, text='Veranstaltung als Text umwandeln', command=self.btn1_press)
         btn1.pack()
-
-        logging.debug("GUI Mainloop started")
+        logging.debug("GUI Elements defined")
 
         self.win = win
         self.lbx1 = lbx1
 
         win.mainloop()
+        logging.debug("GUI Mainloop started")
 
     def btn1_press(self):
         logging.debug("Button 1 pressed")
@@ -69,9 +80,10 @@ class ChurchToolsAgendaZuWord:
             event = self.events[self.lbx1.curselection()[0]]
             logging.debug("Selected event ID: {}".format(event['id']))
             # TODO #4 add FileChooser for destination path
-            selected = [1]
-            selectedServiceGroups = {key: value for key, value in self.serviceGroups.items() if
-                                     key in selected}  # TODO 1 allow for user choice ...
+
+            selectedServiceGroups = \
+                {key: value for key, value in self.serviceGroups.items()
+                 if self.serviceGroupVars[value['name']].get()}
             self.process_agenda(self.event_agendas[self.lbx1.curselection()[0]], serviceGroups=selectedServiceGroups)
             self.win.destroy()
 
