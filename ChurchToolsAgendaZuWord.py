@@ -22,6 +22,7 @@ class ChurchToolsAgendaZuWord:
 
     def load_events_with_agenda(self):
         events_temp = self.api.get_events()
+        events_temp.extend(self.api.get_events(eventId=2129))  #debugging
         logging.debug("{} Events loaded".format(len(events_temp)))
 
         for event in events_temp:
